@@ -1,0 +1,6 @@
+{
+  "name": "VEK Assurance Cloud",
+  "description": "Deterministic post-generation qualification boundary for AI-generated outputs, built for the Build with Gemini XPRIZE.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

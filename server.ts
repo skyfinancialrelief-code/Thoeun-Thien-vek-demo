@@ -19,7 +19,9 @@ const PORT = Number(process.env.PORT) || 3000;
 const HOST = '0.0.0.0';
 const normalizeModelName = (modelName?: string): string => {
   if (!modelName) return 'gemini-3.6-flash';
-  return modelName.trim().replace(/^models\//, '');
+  let cleaned = modelName.trim().replace(/^['"]+|['"]+$/g, '').trim();
+  cleaned = cleaned.replace(/^models\//, '');
+  return cleaned || 'gemini-3.6-flash';
 };
 
 const DEFAULT_MODEL = normalizeModelName(process.env.GEMINI_MODEL || 'gemini-3.6-flash');

@@ -20,6 +20,7 @@ export function ReplayPanel({ evaluation }: ReplayPanelProps) {
           capturedInput: evaluation.capturedInput,
           capturedOutput: evaluation.capturedOutput,
           scenarioId: evaluation.scenarioId,
+          originalQualificationHash: evaluation.qualificationHash,
           runs: 100,
         }),
       });
@@ -83,7 +84,7 @@ export function ReplayPanel({ evaluation }: ReplayPanelProps) {
               <Lock className="w-4 h-4" /> Why is the qualification hash invariant across 100 replays?
             </div>
             <p className="leading-relaxed">
-              Wall-clock time, execution UUIDs, request durations, and host metadata are intentionally <strong>EXCLUDED</strong> from the qualification hash. Only the canonical JSON (RFC 8785) representation of the captured input fingerprint, captured output hash, policy ID, validator version, reason codes, and constraint evaluations enter the qualification hash commitment.
+              Wall-clock time, execution UUIDs, request durations, and host metadata are intentionally <strong>EXCLUDED</strong> from the qualification hash. Only the RFC 8785-aligned demonstration canonicalization of the captured input fingerprint, captured output hash, policy ID, validator version, reason codes, and constraint evaluations enter the qualification hash commitment.
             </p>
           </div>
 

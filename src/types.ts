@@ -1,6 +1,8 @@
 export type Decision = 'PASS' | 'WARN' | 'BLOCK' | 'REVIEW';
 
-export type ScenarioId = 'scenario_a' | 'scenario_b' | 'scenario_c' | 'scenario_d' | 'custom';
+export type ScenarioId = 'scenario_a' | 'scenario_b' | 'scenario_c' | 'scenario_d';
+
+export type GenerationMode = 'LIVE_GEMINI' | 'OFFLINE_FIXTURE' | 'FAIL_CLOSED';
 
 export interface ConstraintResult {
   id: string;
@@ -31,13 +33,16 @@ export interface EvidenceEnvelope {
   execution_id: string;
   captured_timestamp: string;
   model_id: string;
+  generation_mode: GenerationMode;
   cloud_deployment_id: string;
   request_duration_ms: number;
   replay_result: {
     matches: boolean;
     count: number;
     qualification_hash: string;
+    replay_scope: 'raw_candidate_output' | 'redacted_public_preview';
   } | null;
+  replay_scope: 'raw_candidate_output' | 'redacted_public_preview';
   previous_envelope_hash: string | null;
   evidence_envelope_version: string;
   qualification_payload: QualificationPayload;
@@ -57,6 +62,7 @@ export interface EvaluationResponse {
   scenarioId: ScenarioId;
   decision: Decision;
   reasonCodes: string[];
+  generationMode: GenerationMode;
   capturedInput: string;
   capturedOutput: string;
   qualificationPayload: QualificationPayload;
@@ -72,25 +78,30 @@ export interface ReplayRequest {
   capturedOutput: string;
   scenarioId: ScenarioId;
   runs?: number;
+  originalQualificationHash?: string;
 }
 
 export interface ReplayResponse {
   success: boolean;
   runsExecuted: number;
   allHashesMatch: boolean;
+  matchesOriginalHash: boolean;
   uniqueHashesCount: number;
   primaryHash: string;
+  replayScope: 'raw_candidate_output' | 'redacted_public_preview';
   executionLog: Array<{
     iteration: number;
     qualificationHash: string;
     timestamp: string;
   }>;
   wallClockExclusionVerified: boolean;
+  disclaimer?: string;
+  error?: string;
 }
 
 export interface TelemetryData {
   totalExecutions: number;
-  uniqueUsers: number;
+  ephemeralDemonstrationSessions: number;
   geminiCalls: number;
   decisions: Record<Decision, number>;
   envelopeDownloads: number;

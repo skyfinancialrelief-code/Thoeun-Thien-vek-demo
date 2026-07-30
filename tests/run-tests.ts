@@ -157,9 +157,11 @@ async function runTestSuite() {
       execution_id: 'exec-101',
       captured_timestamp: '2026-07-27T12:00:00.000Z',
       model_id: 'gemini-3.6-flash',
+      generation_mode: 'OFFLINE_FIXTURE',
       cloud_deployment_id: 'cloud-run-vek-prod',
       request_duration_ms: 120,
       replay_result: null,
+      replay_scope: 'raw_candidate_output',
       previous_envelope_hash: null,
       evidence_envelope_version: '1.0.0-evidence',
       qualification_payload: evalResult.payload,
@@ -221,7 +223,62 @@ async function runTestSuite() {
     assert(false, 'Secret Redaction Helper', err.message);
   }
 
-  // Test 14: Mocked Gemini Integration Path Verification
+  // Test 14: Unknown Scenario Rejection
+  try {
+    const resUnknown = evaluateCandidateOutput('prompt', 'output', 'scenario_unknown' as ScenarioId);
+    assert(resUnknown.decision === 'BLOCK', 'Unknown Scenario Decision is BLOCK', `Got: ${resUnknown.decision}`);
+    assert(resUnknown.reasonCodes.includes('INVALID_SCENARIO'), 'Unknown Scenario Reason Code INVALID_SCENARIO');
+  } catch (err: any) {
+    assert(false, 'Unknown Scenario Rejection', err.message);
+  }
+
+  // Test 15: Replay Run Limit Cap Enforcement (Limit 1-100)
+  try {
+    const replayResCapped = runDeterministicReplay({
+      capturedInput: 'Small business report prompt',
+      capturedOutput: 'EXECUTIVE SUMMARY: Good. KEY METRICS: [REF-101]',
+      scenarioId: 'scenario_a',
+      runs: 150, // Requesting >100 should cap at 100
+    });
+    assert(replayResCapped.runsExecuted === 100, 'Replay runs requested above 100 capped at 100');
+  } catch (err: any) {
+    assert(false, 'Replay Run Limit Cap Enforcement', err.message);
+  }
+
+  // Test 16: Evidence Envelope Hash Tamper Detection
+  try {
+    const evalResult = evaluateCandidateOutput('input', 'output with [REF-101] and Executive Summary', 'scenario_a');
+    const partialEnv: Omit<EvidenceEnvelope, 'envelope_hash'> = {
+      qualification_hash: evalResult.qualificationHash,
+      execution_id: 'exec-test-tamper',
+      captured_timestamp: new Date().toISOString(),
+      model_id: 'gemini-3.6-flash',
+      generation_mode: 'OFFLINE_FIXTURE',
+      cloud_deployment_id: 'local-development',
+      request_duration_ms: 50,
+      replay_result: null,
+      replay_scope: 'raw_candidate_output',
+      previous_envelope_hash: null,
+      evidence_envelope_version: '1.0.0-evidence',
+      qualification_payload: evalResult.payload,
+      captured_input: 'input',
+      captured_output: 'output',
+    };
+    const validHash = computeEnvelopeHash(partialEnv);
+
+    // Tamper with payload field
+    const tamperedPartialEnv = {
+      ...partialEnv,
+      captured_input: 'TAMPERED_INPUT',
+    };
+    const tamperedHash = computeEnvelopeHash(tamperedPartialEnv);
+
+    assert(validHash !== tamperedHash, 'Envelope hash changes when content is tampered');
+  } catch (err: any) {
+    assert(false, 'Evidence Envelope Hash Tamper Detection', err.message);
+  }
+
+  // Test 17: Mocked Gemini Integration Path Verification
   try {
     const mockedGeminiResponse = {
       text: 'EXECUTIVE SUMMARY: Mocked Gemini Revenue Report [REF-101] Key Metrics Analysis.',
@@ -232,7 +289,7 @@ async function runTestSuite() {
     assert(false, 'Mocked Gemini Integration Path', err.message);
   }
 
-  // Test 15: Optional Live Gemini Smoke Test (if enabled)
+  // Test 18: Optional Live Gemini Smoke Test (if enabled)
   if (process.env.ENABLE_LIVE_GEMINI_TEST === 'true' && process.env.GEMINI_API_KEY) {
     console.log('  🌐 Running Optional Live Gemini Smoke Test...');
     try {

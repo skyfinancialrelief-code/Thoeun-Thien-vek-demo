@@ -1,0 +1,36 @@
+name: VEK Assurance Cloud CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies (clean install)
+        run: npm ci
+
+      - name: Run Type Check & Lint
+        run: npm run lint
+
+      - name: Run Security Check
+        run: npm run security:check
+
+      - name: Run Deterministic Qualification Test Suite
+        run: npm run test
+
+      - name: Build Application Artifacts
+        run: npm run build

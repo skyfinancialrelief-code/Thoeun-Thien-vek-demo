@@ -14,9 +14,10 @@ export default function App() {
   const [prompt, setPrompt] = useState<string>(SCENARIOS[0].defaultPrompt);
   const [loading, setLoading] = useState<boolean>(false);
   const [evaluation, setEvaluation] = useState<EvaluationResponse | null>(null);
-  const [health, setHealth] = useState<{ geminiModel: string; deploymentId: string }>({
+  const [health, setHealth] = useState<{ geminiModel: string; deploymentId: string; cloudRunActive: boolean }>({
     geminiModel: 'gemini-3.6-flash',
-    deploymentId: 'cloud-run-vek-prod',
+    deploymentId: 'local-development',
+    cloudRunActive: false,
   });
 
   useEffect(() => {
@@ -26,7 +27,8 @@ export default function App() {
         if (data.geminiModel) {
           setHealth({
             geminiModel: data.geminiModel,
-            deploymentId: data.deploymentId || 'cloud-run-vek-prod',
+            deploymentId: data.deploymentId || 'local-development',
+            cloudRunActive: Boolean(data.cloudRunActive),
           });
         }
       })
@@ -67,7 +69,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col selection:bg-indigo-500 selection:text-white">
       {/* App Header */}
-      <Header modelName={health.geminiModel} deploymentId={health.deploymentId} />
+      <Header
+        modelName={health.geminiModel}
+        deploymentId={health.deploymentId}
+        cloudRunActive={health.cloudRunActive}
+      />
 
       {/* Mandatory Scientific Claim Boundary Callout */}
       <ClaimBoundaryBanner />

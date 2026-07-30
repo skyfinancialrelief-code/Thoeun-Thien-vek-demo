@@ -3,9 +3,12 @@ import { ShieldCheck, Cpu, Cloud, Lock, CheckCircle2 } from 'lucide-react';
 interface HeaderProps {
   modelName: string;
   deploymentId: string;
+  cloudRunActive?: boolean;
 }
 
-export function Header({ modelName, deploymentId }: HeaderProps) {
+export function Header({ modelName, deploymentId, cloudRunActive }: HeaderProps) {
+  const isCloud = cloudRunActive ?? (deploymentId !== 'local-development' && deploymentId !== 'cloud-run-vek-prod');
+
   return (
     <header className="bg-slate-900 border-b border-slate-800 text-white px-6 py-5">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -38,13 +41,15 @@ export function Header({ modelName, deploymentId }: HeaderProps) {
           <div className="flex items-center gap-1.5 bg-slate-800 border border-slate-700/80 px-3 py-1.5 rounded-md text-slate-300">
             <Cloud className="w-3.5 h-3.5 text-sky-400" />
             <span className="text-slate-400">Host:</span>
-            <span className="font-mono text-sky-300 font-medium">Google Cloud Run</span>
+            <span className="font-mono text-sky-300 font-medium">
+              {isCloud ? 'Google Cloud Run' : 'Local Development'}
+            </span>
           </div>
 
           <div className="flex items-center gap-1.5 bg-slate-800 border border-slate-700/80 px-3 py-1.5 rounded-md text-slate-300">
             <Lock className="w-3.5 h-3.5 text-emerald-400" />
             <span className="text-slate-400">Profile:</span>
-            <span className="font-mono text-emerald-300 font-medium">RFC 8785 JCS</span>
+            <span className="font-mono text-emerald-300 font-medium">RFC 8785 Demo JCS</span>
           </div>
 
           <div className="flex items-center gap-1.5 bg-emerald-950/60 border border-emerald-800/80 px-3 py-1.5 rounded-md text-emerald-300">

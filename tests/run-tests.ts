@@ -370,6 +370,72 @@ async function runTestSuite() {
     assert(false, 'Error Sanitization Verification', err.message);
   }
 
+  // Test 23: Complete Lifecycle Verification (Evaluate -> Replay -> Updated Envelope -> Download Verification)
+  try {
+    const input = 'Small business report prompt';
+    const output = 'EXECUTIVE SUMMARY: Good. KEY METRICS: [REF-101]';
+    const evalRes = evaluateCandidateOutput(input, output, 'scenario_a');
+
+    const baseEnvWithoutHash: Omit<EvidenceEnvelope, 'envelope_hash'> = {
+      qualification_hash: evalRes.qualificationHash,
+      execution_id: 'exec-test-lifecycle-123',
+      captured_timestamp: new Date().toISOString(),
+      model_id: 'gemini-3.6-flash',
+      generation_mode: 'LIVE_GEMINI',
+      cloud_deployment_id: 'local-dev',
+      request_duration_ms: 120,
+      replay_result: null,
+      replay_scope: 'raw_candidate_output',
+      previous_envelope_hash: null,
+      evidence_envelope_version: '1.0.0-evidence',
+      qualification_payload: evalRes.payload,
+      captured_input: input,
+      captured_output: output,
+    };
+    const initialHash = computeEnvelopeHash(baseEnvWithoutHash);
+    const initialEnvelope: EvidenceEnvelope = { ...baseEnvWithoutHash, envelope_hash: initialHash };
+
+    // Perform Replay Simulation
+    const replayRes = runDeterministicReplay({
+      capturedInput: input,
+      capturedOutput: output,
+      scenarioId: 'scenario_a',
+      originalQualificationHash: evalRes.qualificationHash,
+      runs: 10,
+    });
+
+    const replayResultObj = {
+      matches: replayRes.allHashesMatch && replayRes.matchesOriginalHash,
+      count: replayRes.runsExecuted,
+      qualification_hash: replayRes.primaryHash,
+      replay_scope: replayRes.replayScope,
+    };
+
+    const { envelope_hash: previousEnvelopeHash, ...envelopeWithoutHash } = initialEnvelope;
+    const partialUpdatedEnv: Omit<EvidenceEnvelope, 'envelope_hash'> = {
+      ...envelopeWithoutHash,
+      replay_result: replayResultObj,
+      replay_scope: replayRes.replayScope,
+      previous_envelope_hash: previousEnvelopeHash,
+    };
+
+    const updatedHash = computeEnvelopeHash(partialUpdatedEnv);
+    const updatedEnvelope: EvidenceEnvelope = {
+      ...partialUpdatedEnv,
+      envelope_hash: updatedHash,
+    };
+
+    // Verify Download Verification Check logic
+    const { envelope_hash: downloadedHash, ...downloadPartialEnv } = updatedEnvelope;
+    const recomputedDownloadedHash = computeEnvelopeHash(downloadPartialEnv);
+
+    assert(recomputedDownloadedHash === downloadedHash, 'Recomputed updated envelope hash matches downloaded envelope_hash');
+    assert(updatedEnvelope.previous_envelope_hash === initialHash, 'Updated envelope records initial envelope hash as previous_envelope_hash');
+    assert(computeQualificationHash(updatedEnvelope.qualification_payload) === updatedEnvelope.qualification_hash, 'Updated envelope qualification hash verification succeeds');
+  } catch (err: any) {
+    assert(false, 'Complete Lifecycle Verification Test', err.message);
+  }
+
   // Test 18: Optional Live Gemini Smoke Test (if enabled)
   if (process.env.ENABLE_LIVE_GEMINI_TEST === 'true' && process.env.GEMINI_API_KEY) {
     console.log('  🌐 Running Optional Live Gemini Smoke Test...');

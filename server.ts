@@ -61,6 +61,15 @@ function rateLimiter(req: Request, res: Response, next: NextFunction) {
   const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
   const now = Date.now();
 
+  // Periodic cleanup of expired rate limit entries to prevent memory leaks
+  if (ipRequestCounts.size > 500) {
+    for (const [ip, record] of ipRequestCounts.entries()) {
+      if (now > record.resetAt) {
+        ipRequestCounts.delete(ip);
+      }
+    }
+  }
+
   let record = ipRequestCounts.get(clientIp);
   if (!record || now > record.resetAt) {
     record = { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS };
@@ -326,10 +335,13 @@ async function startServer() {
         replay_scope: replayResult.replayScope,
       };
 
+      const { envelope_hash: previousEnvelopeHash, ...envelopeWithoutHash } = body.envelope;
+
       const partialEnv: Omit<EvidenceEnvelope, 'envelope_hash'> = {
-        ...body.envelope,
+        ...envelopeWithoutHash,
         replay_result: replayResultObj,
         replay_scope: replayResult.replayScope,
+        previous_envelope_hash: previousEnvelopeHash || envelopeWithoutHash.previous_envelope_hash || null,
       };
 
       const newEnvelopeHash = computeEnvelopeHash(partialEnv);

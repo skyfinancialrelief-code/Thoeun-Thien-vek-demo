@@ -82,7 +82,7 @@ export function runDeterministicReplay(request: ReplayRequest): ReplayResponse {
   const allHashesMatch = internalMatches && matchesOriginalHash;
 
   const disclaimer = isRedacted
-    ? 'Note: Redacted public preview artifact cannot independently reconstruct raw-output qualification hash because raw secrets were removed for security.'
+    ? 'Public redacted-preview replay only. The original raw candidate was withheld, so the public artifact cannot independently reconstruct the raw-output qualification hash.'
     : undefined;
 
   return {

@@ -28,7 +28,7 @@ Small businesses increasingly rely on AI models like Gemini for operational task
 3. **Dual Hash Commitment**:
    - **Qualification Hash**: Covers ONLY deterministic payload material (schema, fingerprints, policy, decision, reason codes, constraint results). Wall-clock time and execution IDs are explicitly EXCLUDED!
    - **Evidence Envelope Hash**: Covers the complete evidence envelope including timestamps, generation mode, replay scope, and deployment IDs.
-4. **100-Replay Engine**: Evaluates a single fixed captured output packet 100 times in-memory, verifying 100.0% qualification hash consistency without making extra Gemini API calls.
+4. **100-Replay Engine**: Evaluates one fixed captured-output packet up to 100 times in memory without additional Gemini calls. For retained, non-redacted packets, the replay hash is compared with the original qualification hash. For Scenario C, only the redacted public preview is replayed, and the interface expressly states that it cannot reconstruct the withheld raw-output qualification hash.
 5. **Four Disclosed Demonstration Policies**:
    - **Scenario A (POL-A-STRUCT)**: Evidence-Structured Output (PASS)
    - **Scenario B (POL-B-MARKETING)**: Unsupported Marketing Claim (WARN)

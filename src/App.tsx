@@ -99,7 +99,12 @@ export default function App() {
             {evaluation ? (
               <>
                 <EvaluationResults evaluation={evaluation} />
-                <ReplayPanel evaluation={evaluation} />
+                <ReplayPanel
+                  evaluation={evaluation}
+                  onUpdateEnvelope={(updatedEnvelope) =>
+                    setEvaluation((prev) => (prev ? { ...prev, evidenceEnvelope: updatedEnvelope } : null))
+                  }
+                />
                 <EvidenceInspector envelope={evaluation.evidenceEnvelope} />
               </>
             ) : (

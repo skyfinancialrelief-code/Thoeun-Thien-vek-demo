@@ -115,10 +115,14 @@ async function runTestSuite() {
 
   // Test 9: 100 Identical Qualification Replays
   try {
+    const input9 = 'Small business report prompt';
+    const output9 = 'EXECUTIVE SUMMARY: Good. KEY METRICS: [REF-101]';
+    const eval9 = evaluateCandidateOutput(input9, output9, 'scenario_a');
     const replayRes = runDeterministicReplay({
-      capturedInput: 'Small business report prompt',
-      capturedOutput: 'EXECUTIVE SUMMARY: Good. KEY METRICS: [REF-101]',
+      capturedInput: input9,
+      capturedOutput: output9,
       scenarioId: 'scenario_a',
+      originalQualificationHash: eval9.qualificationHash,
       runs: 100,
     });
     assert(replayRes.runsExecuted === 100, 'Replay executed 100 iterations');
@@ -234,10 +238,14 @@ async function runTestSuite() {
 
   // Test 15: Replay Run Limit Cap Enforcement (Limit 1-100)
   try {
+    const input15 = 'Small business report prompt';
+    const output15 = 'EXECUTIVE SUMMARY: Good. KEY METRICS: [REF-101]';
+    const eval15 = evaluateCandidateOutput(input15, output15, 'scenario_a');
     const replayResCapped = runDeterministicReplay({
-      capturedInput: 'Small business report prompt',
-      capturedOutput: 'EXECUTIVE SUMMARY: Good. KEY METRICS: [REF-101]',
+      capturedInput: input15,
+      capturedOutput: output15,
       scenarioId: 'scenario_a',
+      originalQualificationHash: eval15.qualificationHash,
       runs: 150, // Requesting >100 should cap at 100
     });
     assert(replayResCapped.runsExecuted === 100, 'Replay runs requested above 100 capped at 100');
@@ -287,6 +295,79 @@ async function runTestSuite() {
     assert(evalMock.decision === 'PASS', 'Mocked Gemini Integration Path qualifies candidate output as PASS');
   } catch (err: any) {
     assert(false, 'Mocked Gemini Integration Path', err.message);
+  }
+
+  // Test 19: Tampering with generation_mode or replay_scope Alters Envelope Hash
+  try {
+    const evalRes = evaluateCandidateOutput('in', 'out with [REF-101] and Executive Summary', 'scenario_a');
+    const baseEnv: Omit<EvidenceEnvelope, 'envelope_hash'> = {
+      qualification_hash: evalRes.qualificationHash,
+      execution_id: 'exec-test-mode-scope',
+      captured_timestamp: new Date().toISOString(),
+      model_id: 'gemini-3.6-flash',
+      generation_mode: 'LIVE_GEMINI',
+      cloud_deployment_id: 'local-dev',
+      request_duration_ms: 100,
+      replay_result: null,
+      replay_scope: 'raw_candidate_output',
+      previous_envelope_hash: null,
+      evidence_envelope_version: '1.0.0-evidence',
+      qualification_payload: evalRes.payload,
+      captured_input: 'in',
+      captured_output: 'out',
+    };
+
+    const origHash = computeEnvelopeHash(baseEnv);
+    const tamperedModeHash = computeEnvelopeHash({ ...baseEnv, generation_mode: 'OFFLINE_FIXTURE' });
+    const tamperedScopeHash = computeEnvelopeHash({ ...baseEnv, replay_scope: 'redacted_public_preview' });
+
+    assert(origHash !== tamperedModeHash, 'Tampering with generation_mode alters envelope_hash');
+    assert(origHash !== tamperedScopeHash, 'Tampering with replay_scope alters envelope_hash');
+  } catch (err: any) {
+    assert(false, 'Tampering with generation_mode or replay_scope', err.message);
+  }
+
+  // Test 20: Replay Requires originalQualificationHash
+  try {
+    const noHashReplay = runDeterministicReplay({
+      capturedInput: 'input',
+      capturedOutput: 'output',
+      scenarioId: 'scenario_a',
+      originalQualificationHash: '',
+      runs: 10,
+    });
+    assert(noHashReplay.success === false, 'Replay fails when originalQualificationHash is missing');
+    assert(Boolean(noHashReplay.error), 'Replay provides error message when originalQualificationHash is missing');
+  } catch (err: any) {
+    assert(false, 'Replay Requires originalQualificationHash', err.message);
+  }
+
+  // Test 21: Redacted Candidate Output Replay Handling (Scenario C)
+  try {
+    const evalC = evaluateCandidateOutput('Prompt injection', '[BLOCKED BY VEK BOUNDARY]: Injection detected', 'scenario_c');
+    const replayC = runDeterministicReplay({
+      capturedInput: 'Prompt injection',
+      capturedOutput: evalC.redactedOutput,
+      scenarioId: 'scenario_c',
+      originalQualificationHash: 'ORIGINAL_RAW_OUTPUT_HASH_ABC123',
+      runs: 10,
+    });
+    assert(replayC.replayScope === 'redacted_public_preview', 'Redacted output replay identifies replayScope as redacted_public_preview');
+    assert(replayC.matchesOriginalHash === false, 'Redacted output replay does NOT match original raw output hash');
+    assert(replayC.allHashesMatch === false, 'Redacted output replay allHashesMatch is false');
+    assert(Boolean(replayC.disclaimer), 'Redacted output replay provides disclaimer explaining hash mismatch');
+  } catch (err: any) {
+    assert(false, 'Redacted Candidate Output Replay Handling', err.message);
+  }
+
+  // Test 22: Error Sanitization Verification
+  try {
+    const rawErrorWithSecret = 'API Error 400: Failed for key AIzaSy123456789012345678901234567890123 in request path';
+    const sanitizedError = sanitizeOutput(rawErrorWithSecret);
+    assert(!sanitizedError.includes('AIzaSy1234567890'), 'Sanitize output removes API key from error string');
+    assert(sanitizedError.includes('[REDACTED: Sensitive Key/Credential Pattern'), 'Sanitize output replaces API key with redaction marker');
+  } catch (err: any) {
+    assert(false, 'Error Sanitization Verification', err.message);
   }
 
   // Test 18: Optional Live Gemini Smoke Test (if enabled)

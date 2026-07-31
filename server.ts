@@ -2,8 +2,8 @@ import express, { type Request, type Response, type NextFunction } from 'express
 import path from 'node:path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
-import { computeEnvelopeHash, computeQualificationHash } from './src/lib/canonical';
-import { evaluateCandidateOutput, getFailClosedCandidateOutput, getFallbackCandidateOutput } from './src/lib/validator';
+import { computeEnvelopeHash, computeQualificationHash, sha256 } from './src/lib/canonical';
+import { evaluateCandidateOutput, getFailClosedCandidateOutput, getFallbackCandidateOutput, sanitizeOutput } from './src/lib/validator';
 import { runDeterministicReplay } from './src/lib/replay';
 import type {
   Decision,
@@ -17,11 +17,23 @@ import type {
 
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = '0.0.0.0';
+
+const APPROVED_MODELS = new Set<string>([
+  'gemini-3.6-flash',
+  'gemini-1.5-pro',
+  'gemini-1.5-flash',
+  'gemini-2.0-flash',
+  'gemini-2.5-flash',
+]);
+
 const normalizeModelName = (modelName?: string): string => {
-  if (!modelName) return 'gemini-3.6-flash';
+  if (!modelName || typeof modelName !== 'string') return 'gemini-3.6-flash';
   let cleaned = modelName.trim().replace(/^['"]+|['"]+$/g, '').trim();
-  cleaned = cleaned.replace(/^models\//, '');
-  return cleaned || 'gemini-3.6-flash';
+  cleaned = cleaned.replace(/^models\//, '').trim();
+  if (APPROVED_MODELS.has(cleaned)) {
+    return cleaned;
+  }
+  return 'gemini-3.6-flash';
 };
 
 const DEFAULT_MODEL = normalizeModelName(process.env.GEMINI_MODEL || 'gemini-3.6-flash');
@@ -29,7 +41,7 @@ const CLOUD_DEPLOYMENT_ID = process.env.K_SERVICE || 'local-development';
 
 const startTime = Date.now();
 
-// In-Memory Telemetry Metrics
+// In-Memory Telemetry Metrics (Aggregate metrics only - no IP session tracking)
 const metrics: TelemetryData = {
   totalExecutions: 0,
   ephemeralDemonstrationSessions: 0,
@@ -39,8 +51,6 @@ const metrics: TelemetryData = {
   uptimeSeconds: 0,
   lastDeployTimestamp: new Date().toISOString(),
 };
-
-const uniqueUserHashes = new Set<string>();
 
 // Rate Limiting Map
 const ipRequestCounts = new Map<string, { count: number; resetAt: number }>();
@@ -69,11 +79,6 @@ function rateLimiter(req: Request, res: Response, next: NextFunction) {
     });
     return;
   }
-
-  // Track ephemeral demonstration sessions
-  const anonymizedIp = clientIp.split('.').slice(0, 3).join('.') + '.0';
-  uniqueUserHashes.add(anonymizedIp);
-  metrics.ephemeralDemonstrationSessions = uniqueUserHashes.size;
 
   next();
 }
@@ -187,9 +192,10 @@ async function startServer() {
         capturedOutput = response.text || '';
         generationMode = 'LIVE_GEMINI';
       } catch (err: any) {
-        console.error('Gemini API call error/timeout, failing closed:', err?.message || err);
+        const rawErr = err?.message || String(err);
+        geminiErrorMessage = sanitizeOutput(rawErr);
+        console.error('Gemini API call error/timeout, failing closed:', geminiErrorMessage);
         isGeminiError = true;
-        geminiErrorMessage = err?.message || 'Gemini API call failed';
         generationMode = 'FAIL_CLOSED';
         capturedOutput = getFailClosedCandidateOutput(scenarioId, prompt, geminiErrorMessage);
       }
@@ -276,13 +282,21 @@ async function startServer() {
 
   // Replay Endpoint
   app.post('/api/replay', (req: Request, res: Response) => {
-    const body: ReplayRequest = req.body || {};
+    const body: ReplayRequest & { envelope?: EvidenceEnvelope } = req.body || {};
     const ALLOWED_SCENARIOS = new Set<string>(['scenario_a', 'scenario_b', 'scenario_c', 'scenario_d']);
 
     if (!body.scenarioId || !ALLOWED_SCENARIOS.has(body.scenarioId)) {
       res.status(400).json({
         error: 'Invalid or unsupported scenarioId. Permitted values: scenario_a, scenario_b, scenario_c, scenario_d',
         code: 'INVALID_SCENARIO',
+      });
+      return;
+    }
+
+    if (!body.originalQualificationHash || typeof body.originalQualificationHash !== 'string') {
+      res.status(400).json({
+        error: 'originalQualificationHash is required for replay verification.',
+        code: 'MISSING_ORIGINAL_HASH',
       });
       return;
     }
@@ -301,7 +315,34 @@ async function startServer() {
     }
 
     const replayResult = runDeterministicReplay(body);
-    res.json(replayResult);
+
+    let updatedEvidenceEnvelope: EvidenceEnvelope | null = null;
+
+    if (body.envelope && typeof body.envelope === 'object') {
+      const replayResultObj = {
+        matches: replayResult.allHashesMatch && replayResult.matchesOriginalHash,
+        count: replayResult.runsExecuted,
+        qualification_hash: replayResult.primaryHash,
+        replay_scope: replayResult.replayScope,
+      };
+
+      const partialEnv: Omit<EvidenceEnvelope, 'envelope_hash'> = {
+        ...body.envelope,
+        replay_result: replayResultObj,
+        replay_scope: replayResult.replayScope,
+      };
+
+      const newEnvelopeHash = computeEnvelopeHash(partialEnv);
+      updatedEvidenceEnvelope = {
+        ...partialEnv,
+        envelope_hash: newEnvelopeHash,
+      };
+    }
+
+    res.json({
+      ...replayResult,
+      updatedEvidenceEnvelope,
+    });
   });
 
   // Download Evidence Envelope Endpoint with Server-Side Verification
@@ -318,15 +359,47 @@ async function startServer() {
       return;
     }
 
+    // 1. Verify Envelope Hash
     const { envelope_hash, ...partialEnvelope } = envelope;
-    const recomputedHash = computeEnvelopeHash(partialEnvelope);
+    const recomputedEnvHash = computeEnvelopeHash(partialEnvelope);
 
-    if (recomputedHash !== envelope_hash) {
+    if (recomputedEnvHash !== envelope_hash) {
       res.status(400).json({
         error: 'Envelope hash mismatch: envelope appears to be tampered or altered.',
         code: 'ENVELOPE_TAMPERED',
       });
       return;
+    }
+
+    // 2. Verify Qualification Hash from Qualification Payload
+    const recomputedQualHash = computeQualificationHash(envelope.qualification_payload);
+    if (recomputedQualHash !== envelope.qualification_hash) {
+      res.status(400).json({
+        error: 'Qualification hash mismatch: qualification payload has been tampered or altered.',
+        code: 'QUALIFICATION_HASH_TAMPERED',
+      });
+      return;
+    }
+
+    // 3. Verify Captured Artifacts Consistency with Fingerprints/Hashes
+    const inputFingerprint = sha256(envelope.captured_input || '');
+    if (inputFingerprint !== envelope.qualification_payload.captured_input_fingerprint) {
+      res.status(400).json({
+        error: 'Captured input fingerprint mismatch: captured_input does not match fingerprint in qualification payload.',
+        code: 'INPUT_FINGERPRINT_TAMPERED',
+      });
+      return;
+    }
+
+    if (envelope.replay_scope === 'raw_candidate_output') {
+      const outputHash = sha256(envelope.captured_output || '');
+      if (outputHash !== envelope.qualification_payload.captured_output_hash) {
+        res.status(400).json({
+          error: 'Captured output hash mismatch: captured_output does not match hash in qualification payload.',
+          code: 'OUTPUT_HASH_TAMPERED',
+        });
+        return;
+      }
     }
 
     const safeExecId = String(envelope.execution_id || 'dump').replace(/[^a-zA-Z0-9_-]/g, '');

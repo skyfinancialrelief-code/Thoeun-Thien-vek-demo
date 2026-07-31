@@ -125,11 +125,13 @@ export function computeEnvelopeHash(
     cloud_deployment_id: envelope.cloud_deployment_id,
     evidence_envelope_version: envelope.evidence_envelope_version,
     execution_id: envelope.execution_id,
+    generation_mode: envelope.generation_mode,
     model_id: envelope.model_id,
     previous_envelope_hash: envelope.previous_envelope_hash,
     qualification_hash: envelope.qualification_hash,
     qualification_payload: envelope.qualification_payload,
     replay_result: envelope.replay_result,
+    replay_scope: envelope.replay_scope,
     request_duration_ms: envelope.request_duration_ms,
   };
 

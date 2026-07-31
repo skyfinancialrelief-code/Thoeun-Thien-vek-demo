@@ -24,17 +24,17 @@ Small businesses increasingly rely on AI models like Gemini for operational task
 ## Key Features & Demonstrated Workflows
 
 1. **Server-Side Gemini Integration**: Makes real Gemini API calls via `@google/genai` using configurable `GEMINI_MODEL` (default: `gemini-3.6-flash`).
-2. **Deterministic RFC 8785 JSON Canonicalization**: Uses JCS sorting and canonical formatting for strict hash reproducibility.
+2. **Deterministic RFC 8785-Aligned Demonstration Canonicalization**: Uses JCS sorting and canonical formatting for strict hash reproducibility.
 3. **Dual Hash Commitment**:
    - **Qualification Hash**: Covers ONLY deterministic payload material (schema, fingerprints, policy, decision, reason codes, constraint results). Wall-clock time and execution IDs are explicitly EXCLUDED!
-   - **Evidence Envelope Hash**: Covers the complete evidence envelope including timestamps and deployment IDs.
-4. **100-Replay Engine**: Evaluates a single captured output packet 100 times in-memory, verifying 100.0% qualification hash consistency without making extra Gemini API calls.
+   - **Evidence Envelope Hash**: Covers the complete evidence envelope including timestamps, generation mode, replay scope, and deployment IDs.
+4. **100-Replay Engine**: Evaluates a single fixed captured output packet 100 times in-memory, verifying 100.0% qualification hash consistency without making extra Gemini API calls.
 5. **Four Disclosed Demonstration Policies**:
    - **Scenario A (POL-A-STRUCT)**: Evidence-Structured Output (PASS)
    - **Scenario B (POL-B-MARKETING)**: Unsupported Marketing Claim (WARN)
    - **Scenario C (POL-C-EXFILTRATION)**: Prompt Injection / Secret Exfiltration Attempt (BLOCK & Redaction)
    - **Scenario D (POL-D-CLASSIFICATION)**: Small-Business Transaction Classification (REVIEW/PASS)
-6. **Containerized Cloud Run Deployment**: Production-ready Dockerfile, health endpoint (`/api/health`), rate limiting, secure headers, and fail-closed handling.
+6. **Containerized Cloud Run Architecture**: Multi-stage Dockerfile, health endpoint (`/api/health`), rate limiting, security headers, and fail-closed handling.
 
 ---
 

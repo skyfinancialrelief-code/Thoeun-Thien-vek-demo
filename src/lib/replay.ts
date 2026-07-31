@@ -39,6 +39,21 @@ export function runDeterministicReplay(request: ReplayRequest): ReplayResponse {
     ? 'redacted_public_preview'
     : 'raw_candidate_output';
 
+  if (!originalQualificationHash || typeof originalQualificationHash !== 'string') {
+    return {
+      success: false,
+      runsExecuted: 0,
+      allHashesMatch: false,
+      matchesOriginalHash: false,
+      uniqueHashesCount: 0,
+      primaryHash: '',
+      replayScope,
+      executionLog: [],
+      wallClockExclusionVerified: false,
+      error: 'originalQualificationHash is required for replay verification.',
+    };
+  }
+
   const executionLog: Array<{
     iteration: number;
     qualificationHash: string;
@@ -62,9 +77,7 @@ export function runDeterministicReplay(request: ReplayRequest): ReplayResponse {
   const uniqueHashesCount = hashesSet.size;
   const internalMatches = uniqueHashesCount === 1;
 
-  const matchesOriginalHash = Boolean(
-    originalQualificationHash ? primaryHash === originalQualificationHash : true
-  );
+  const matchesOriginalHash = primaryHash === originalQualificationHash;
 
   const allHashesMatch = internalMatches && matchesOriginalHash;
 

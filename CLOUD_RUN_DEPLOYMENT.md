@@ -1,7 +1,7 @@
 # Google Cloud Run Deployment Guide
 
 **Project Name:** VEK Assurance Cloud  
-**Company:** GUTS Deterministic Technology LLC  
+**Company:** Guts Deterministic Technology LLC  
 
 ---
 

@@ -1,6 +1,6 @@
 # Pre-Existing Intellectual Property Disclosure
 
-**Company:** GUTS Deterministic Technology LLC  
+**Company:** Guts Deterministic Technology LLC  
 **Founder:** Thoeun Thien  
 **Project:** VEK Assurance Cloud  
 
@@ -8,9 +8,9 @@
 
 ## Factual Disclosure Statement
 
-1. **Pre-Existing Architecture**: The VEK post-generation qualification concept, high-level boundary evaluation methodology, and foundational assurance frameworks were conceived and documented by GUTS Deterministic Technology LLC prior to the commencement of the Build with Gemini XPRIZE.
+1. **Pre-Existing Architecture**: The VEK post-generation qualification concept, high-level boundary evaluation methodology, and foundational assurance frameworks were conceived and documented by Guts Deterministic Technology LLC prior to the commencement of the Build with Gemini XPRIZE.
 
-2. **Retention of Rights**: GUTS Deterministic Technology LLC retains all pre-existing intellectual property rights, patent rights, trade secrets, and ownership in its proprietary VEK core architecture, TT2/DOCE-X policy frameworks, and associated methodologies.
+2. **Retention of Rights**: Guts Deterministic Technology LLC retains all pre-existing intellectual property rights, patent rights, trade secrets, and ownership in its proprietary VEK core architecture, TT2/DOCE-X policy frameworks, and associated methodologies.
 
 3. **Hackathon Implementation Scope**: The software implementation contained in this repository represents a limited, open demonstration constructed during the competition period. It applies demonstration validators to captured outputs from Google Gemini (`@google/genai`).
 

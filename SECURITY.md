@@ -1,7 +1,7 @@
 # Security Architecture & Credential Protection
 
 **Project:** VEK Assurance Cloud  
-**Company:** GUTS Deterministic Technology LLC  
+**Company:** Guts Deterministic Technology LLC  
 
 ---
 

@@ -1,7 +1,7 @@
 # Business Evidence & Operations Record Template
 
 **Project Name:** VEK Assurance Cloud  
-**Company:** GUTS Deterministic Technology LLC  
+**Company:** Guts Deterministic Technology LLC  
 **Founder:** Thoeun Thien  
 
 > **CRITICAL COMPLIANCE NOTICE:** Every field below reflects strictly verified third-party business data. Unverified fields default to `NOT YET VERIFIED — REAL EVIDENCE REQUIRED`. Sample data, projected earnings, or synthetic user accounts are strictly prohibited.

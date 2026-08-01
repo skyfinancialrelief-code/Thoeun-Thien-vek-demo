@@ -1,9 +1,9 @@
 # Build with Gemini XPRIZE Submission Overview
 
 **Project Name:** VEK Assurance Cloud  
-**Company:** GUTS Deterministic Technology LLC  
+**Company:** Guts Deterministic Technology LLC  
 **Founder:** Thoeun Thien  
-**Category:** Small Business Services  
+**Category:** Entrepreneurship & Job Creation  
 **Deployment Platform:** Google Cloud Run  
 
 ---

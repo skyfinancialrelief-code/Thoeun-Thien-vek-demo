@@ -1,9 +1,9 @@
 # VEK Assurance Cloud
 
-**Company:** GUTS Deterministic Technology LLC  
+**Company:** Guts Deterministic Technology LLC  
 **Founder:** Thoeun Thien  
 **Competition:** Build with Gemini XPRIZE  
-**Selected Category:** Small Business Services  
+**Selected Category:** Entrepreneurship & Job Creation  
 
 ---
 

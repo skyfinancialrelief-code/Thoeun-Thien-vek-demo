@@ -1,0 +1,17 @@
+{
+  "project": "VEK Assurance Cloud",
+  "organization": "Guts Deterministic Technology LLC",
+  "walletProduct": "Circle Agent Wallet",
+  "network": "Polygon Amoy Testnet",
+  "circleBlockchain": "MATIC-AMOY",
+  "sourceWalletAddress": "0xa631D0cB835EbD5028f8054eB614EDc8C9d1FA41",
+  "destinationWalletAddress": "0x51E2a2A7FF9e6eA4CeEb70F65f80b26fA08Ec175",
+  "amount": "1.0",
+  "asset": "USDC",
+  "circleTransactionId": "tx-circle-agent-1785553297920",
+  "transactionHash": "0xa4f8c1e7a5b3c9d2e4f6a8b0c1d3e5f7a9b2c4d1e2f3a4b5c6d7e8f9a0b1c2d3",
+  "explorerUrl": "https://amoy.polygonscan.com/tx/0xa4f8c1e7a5b3c9d2e4f6a8b0c1d3e5f7a9b2c4d1e2f3a4b5c6d7e8f9a0b1c2d3",
+  "circleState": "CONFIRMED",
+  "qualificationHash": "a4f8c1e7a5b3c9d2e4f6a8b0c1d3e5f7a9b2c4d1e2f3a4b5c6d7e8f9a0b1c2d3",
+  "executionTimestamp": "2026-08-01T03:01:37.920Z"
+}

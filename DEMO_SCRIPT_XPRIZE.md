@@ -1,7 +1,7 @@
 # 3-Minute XPRIZE Demonstration Video Script
 
 **Project Name:** VEK Assurance Cloud  
-**Company:** GUTS Deterministic Technology LLC  
+**Company:** Guts Deterministic Technology LLC  
 **Presenter:** Thoeun Thien (Founder)  
 **Target Duration:** 2 minutes, 55 seconds  
 

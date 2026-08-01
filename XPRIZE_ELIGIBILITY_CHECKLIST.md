@@ -1,7 +1,7 @@
 # Build with Gemini XPRIZE Eligibility Checklist
 
 **Project Name:** VEK Assurance Cloud  
-**Company:** GUTS Deterministic Technology LLC  
+**Company:** Guts Deterministic Technology LLC  
 **Founder:** Thoeun Thien  
 
 ---
@@ -20,8 +20,8 @@
 4. **Main demonstrated AI workflow uses Gemini**:  
    `IMPLEMENTED` — Gemini model (`gemini-3.6-flash`) is the primary and default model.
 
-5. **Operate as a real business serving Small Business Services category**:  
-   `IMPLEMENTED` — Business purpose tailored to post-generation policy qualification for small business operations.
+5. **Operate as a real business serving Entrepreneurship & Job Creation category**:  
+   `IMPLEMENTED` — Business purpose tailored to post-generation policy qualification for entrepreneurship and small business operations.
 
 6. **Repository discloses pre-existing VEK framework separately from new work**:  
    `IMPLEMENTED` — Disclosed in `PREEXISTING_IP_DISCLOSURE.md` and `NEW_WORK_DURING_XPRIZE.md`.

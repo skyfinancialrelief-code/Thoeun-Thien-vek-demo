@@ -2,7 +2,7 @@
 
 **Project Name:** VEK Assurance Cloud  
 **Release Version:** 1.0.0-hackathon  
-**Company:** GUTS Deterministic Technology LLC  
+**Company:** Guts Deterministic Technology LLC  
 **Date:** July 2026  
 
 ---

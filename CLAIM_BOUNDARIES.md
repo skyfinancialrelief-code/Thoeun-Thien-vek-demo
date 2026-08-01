@@ -1,7 +1,7 @@
 # Mandatory Scientific Claim Boundaries
 
 **Project:** VEK Assurance Cloud  
-**Company:** GUTS Deterministic Technology LLC  
+**Company:** Guts Deterministic Technology LLC  
 
 ---
 

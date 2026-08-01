@@ -1,7 +1,7 @@
 # Record of New Work Completed During XPRIZE
 
 **Project Name:** VEK Assurance Cloud  
-**Company:** GUTS Deterministic Technology LLC  
+**Company:** Guts Deterministic Technology LLC  
 
 ---
 

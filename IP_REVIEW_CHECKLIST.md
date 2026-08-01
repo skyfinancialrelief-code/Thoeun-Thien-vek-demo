@@ -1,13 +1,13 @@
 # IP Firewall & Sanitization Review Checklist
 
-**Company:** GUTS Deterministic Technology LLC  
+**Company:** Guts Deterministic Technology LLC  
 **Project:** VEK Assurance Cloud  
 
 ---
 
 ## Mandatory Notice
 
-> “This repository contains an IP-limited hackathon demonstration. It does not contain the proprietary production VEK implementation, confidential policy corpus, theorem mappings, patent claim materials, production identity rules, or sensitive deployment controls of GUTS Deterministic Technology LLC.”
+> “This repository contains an IP-limited hackathon demonstration. It does not contain the proprietary production VEK implementation, confidential policy corpus, theorem mappings, patent claim materials, production identity rules, or sensitive deployment controls of Guts Deterministic Technology LLC.”
 
 ---
 

@@ -5,6 +5,7 @@ import { GoogleGenAI } from '@google/genai';
 import { computeEnvelopeHash, computeQualificationHash, sha256 } from './src/lib/canonical';
 import { evaluateCandidateOutput, getFailClosedCandidateOutput, getFallbackCandidateOutput, sanitizeOutput } from './src/lib/validator';
 import { runDeterministicReplay } from './src/lib/replay';
+import { settleWithCircle, hasAlreadySettled } from './scripts/circle-agent-settlement';
 import type {
   Decision,
   EvaluationRequest,
@@ -270,6 +271,19 @@ async function startServer() {
     // Update Telemetry
     metrics.totalExecutions++;
     metrics.decisions[evaluation.decision] = (metrics.decisions[evaluation.decision] || 0) + 1;
+
+    // Optional Circle Agent Wallet Settlement on Polygon Amoy upon PASS
+    if (
+      evaluation.decision === 'PASS' &&
+      process.env.ENABLE_CIRCLE_SETTLEMENT === 'true' &&
+      !hasAlreadySettled(evaluation.qualificationHash)
+    ) {
+      try {
+        await settleWithCircle(evaluation.qualificationHash);
+      } catch (err: any) {
+        console.error('[Circle Settlement Trigger] Failed to settle:', err?.message || err);
+      }
+    }
 
     const responseData: EvaluationResponse = {
       success: true,
